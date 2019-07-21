@@ -15,9 +15,12 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).json({errors: [err.message || 'Internal server error.']})
 })
 
-//start server
-app.listen(PORT, () => {
-  console.log(`Listening on port `, PORT)
-})
+//only start server if outside of testing environment
+if(!module.parent){
+  //start server
+  app.listen(PORT, () => {
+    console.log(`Listening on port `, PORT)
+  })
+}
 
 module.exports = app

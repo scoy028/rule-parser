@@ -1,6 +1,7 @@
 const {nums, currencyList, emailMatch, yyyymmddMatch, mmddyyyyMatch, currencyMatch, punctuation, directionMatch} = require('./consts')
 
 
+
 //****** Sanitize beginning and end of text string ******//
 
 const sanitize = str => {
@@ -10,12 +11,14 @@ const sanitize = str => {
 }
 
 
+
 //****** Match number to valid numbers ******//
 
 const numParse = num => {
   if (nums.hasOwnProperty(num)) return nums[num]
   else return null
 }
+
 
 
 //****** Match valid type of input to regex ******//
@@ -37,6 +40,7 @@ const typeParse = word => {
 }
 
 
+
 //****** Match everything after direction word ******//
 
 const detailParse = words => {
@@ -55,6 +59,7 @@ const detailParse = words => {
   }
   return [numTwo, word]
 }
+
 
 
 //****** Match each valid word in rule ******//
@@ -80,12 +85,13 @@ const ruleParse = str => {
 }
 
 
+
 //****** Match each word in text with regex ******//
 
 const textParse = (text, regex, details = null) => {
   for (let i = 0; i < text.length; i++) {
     //match regex one or regex two; date matches have 2 regular expression options
-    if (text[i].match(regex[0]) || text[i].match(regex[1])) {
+    if (text[i].match(regex[0]) || text[i].match(regex[1]) && details === null) {
       return text[i]
     }
     //no regex necessary to parse text and there are word(s) after the directional word
@@ -97,6 +103,7 @@ const textParse = (text, regex, details = null) => {
 }
 
 
+
 //****** Based on direction, grab relevant part of text and search for valid answer ******//
 
 const directionParse = (numOne, numTwo, direction, type, textSplit, details) => {
@@ -106,6 +113,7 @@ const directionParse = (numOne, numTwo, direction, type, textSplit, details) => 
   //if there are no indexes to match
   if (numOne === null && numTwo === null) {
     let limitedText
+    if (detailsIndex === -1) return 'NO RESULT'
     //if there are no matching regex
     if (type[0] === null && type[1] === null) {
       let foundIndex = textSplit.indexOf(details)
@@ -141,6 +149,7 @@ const directionParse = (numOne, numTwo, direction, type, textSplit, details) => 
 }
 
 
+
 //****** Parse the rule and return matching data ******//
 
 const applyRule = (text, rule) => {
@@ -148,6 +157,7 @@ const applyRule = (text, rule) => {
   let textSplit = text.split(' ').map(e => {
     return sanitize(e)
   })
+  let textSplitUnsanitized = text.split(' ')
 
   let [numOne, numTwo, type, direction, details] = ruleParse(rule)
 
@@ -157,7 +167,7 @@ const applyRule = (text, rule) => {
     if (direction === 'word' || direction === 'words' || direction === 'string' || direction === 'strings') {
       result = textSplit[numOne - 1]
     } else if (direction === 'through') {
-      result = textSplit.slice(numOne - 1, numTwo).join(' ')
+      result = textSplitUnsanitized.slice(numOne - 1, numTwo).join(' ')
     } else if (direction === 'preceding' || direction === 'following') {
       result = directionParse(numOne, numTwo, direction, type, textSplit, details)
     }
@@ -167,3 +177,39 @@ const applyRule = (text, rule) => {
 }
 
 module.exports = applyRule
+
+// console.log(applyRule('Take scoy@gmail.com a sad song and make it better', 'email following 3 words')) //NO RESULT
+
+// console.log(applyRule('Hey Jude, don\'t make it bad. Take a sad song and make it better', 'string following "Jude"'))
+
+// console.log(applyRule('Hey Jude, don\'t make it bad. Take a sad song and make it better', 'email following "Jude"')) //NO RESULT
+
+// console.log(applyRule('Hey Jude, don\'t make it bad. Take a sad song and make it better', 'string preceding "Jude"'))
+
+// console.log(applyRule('Hey Jude, don\'t it bad. Take a sad song and 3/4/19 make it better', 'date preceding "make"'))
+
+// console.log(applyRule('Hey Jude, don\'t €5 make it bad. Take a sad song and make it better', 'euros preceding 3 words'))
+
+// console.log(applyRule('Hey Jude, don\'t $5 make it bad. Take a sad song and make it better', 'euros preceding 3 words')) //NO RESULT
+
+// console.log(applyRule('Hey Jude, don\'t €5 make it', 'euros preceding 3 words')) //NO RESULT
+
+// console.log(applyRule('Hey Jude, don\'t make it bad. Take a sad song $42.99 and make it better', 'dollars following 3 words'))
+
+// console.log(applyRule('Hey Jude, don\'t make it bad. Take a sad song €42.99 and make it better', 'dollars following 3 words')) //NO RESULT
+
+// console.log(applyRule('sad song $42.99 and make it better', 'dollars following 3 words')) //NO RESULT
+
+// console.log(applyRule('Hey Jude, don\'t it bad. Take a sad song and 3/4/19 it better', 'date preceding "make"')) //NO RESULT
+
+// //NEED TO SOLVE FOR THIS
+console.log(applyRule('Hey Jude, $4 don\'t make it bad. Take a sad song $42.99 and make it better', 'dollars following 3 words'))
+
+
+
+
+// console.log(applyRule('Hey Jude, don\'t make it bad. Take scoy@gmail.com a sad song and make it better', 'email following 3 words'))
+
+// console.log(applyRule('Hey Jude, don\'t make it bad. Take a sad song and make it better', 'second through 4th word'))
+
+// console.log(applyRule('Hey Jude, don\'t make it bad. Take a sad song and make it better', 'sixth word'))
