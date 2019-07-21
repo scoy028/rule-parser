@@ -23,4 +23,4 @@ The request body should look like this:
 If you want to run the test, you can also `npm run test`.
 
 Use Postman to test your request.
-https://www.getpostman.com/collections/729ada44bbcd125dc523
+[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/729ada44bbcd125dc523)

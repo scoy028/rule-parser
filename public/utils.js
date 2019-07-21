@@ -177,39 +177,3 @@ const applyRule = (text, rule) => {
 }
 
 module.exports = applyRule
-
-// console.log(applyRule('Take scoy@gmail.com a sad song and make it better', 'email following 3 words')) //NO RESULT
-
-// console.log(applyRule('Hey Jude, don\'t make it bad. Take a sad song and make it better', 'string following "Jude"'))
-
-// console.log(applyRule('Hey Jude, don\'t make it bad. Take a sad song and make it better', 'email following "Jude"')) //NO RESULT
-
-// console.log(applyRule('Hey Jude, don\'t make it bad. Take a sad song and make it better', 'string preceding "Jude"'))
-
-// console.log(applyRule('Hey Jude, don\'t it bad. Take a sad song and 3/4/19 make it better', 'date preceding "make"'))
-
-// console.log(applyRule('Hey Jude, don\'t €5 make it bad. Take a sad song and make it better', 'euros preceding 3 words'))
-
-// console.log(applyRule('Hey Jude, don\'t $5 make it bad. Take a sad song and make it better', 'euros preceding 3 words')) //NO RESULT
-
-// console.log(applyRule('Hey Jude, don\'t €5 make it', 'euros preceding 3 words')) //NO RESULT
-
-// console.log(applyRule('Hey Jude, don\'t make it bad. Take a sad song $42.99 and make it better', 'dollars following 3 words'))
-
-// console.log(applyRule('Hey Jude, don\'t make it bad. Take a sad song €42.99 and make it better', 'dollars following 3 words')) //NO RESULT
-
-// console.log(applyRule('sad song $42.99 and make it better', 'dollars following 3 words')) //NO RESULT
-
-// console.log(applyRule('Hey Jude, don\'t it bad. Take a sad song and 3/4/19 it better', 'date preceding "make"')) //NO RESULT
-
-// //NEED TO SOLVE FOR THIS
-console.log(applyRule('Hey Jude, $4 don\'t make it bad. Take a sad song $42.99 and make it better', 'dollars following 3 words'))
-
-
-
-
-// console.log(applyRule('Hey Jude, don\'t make it bad. Take scoy@gmail.com a sad song and make it better', 'email following 3 words'))
-
-// console.log(applyRule('Hey Jude, don\'t make it bad. Take a sad song and make it better', 'second through 4th word'))
-
-// console.log(applyRule('Hey Jude, don\'t make it bad. Take a sad song and make it better', 'sixth word'))
