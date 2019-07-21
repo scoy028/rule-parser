@@ -1,47 +1,7 @@
-const nums = {
-  'first': 1,
-  '1st': 1,
-  'second': 2,
-  '2nd': 2,
-  'third': 3,
-  '3rd': 3,
-  'fourth': 4,
-  '4th': 4,
-  'fifth': 5,
-  '5th': 5,
-  'sixth': 6,
-  '6th': 6,
-  'seventh': 7,
-  '7th': 7,
-  'eighth': 8,
-  '8th': 8,
-  'ninth': 9,
-  '9th': 9,
-  'tenth': 10,
-  '10th': 10,
-  'eleventh': 11,
-  '11th': 11,
-  'twelfth': 12,
-  '12th': 12
-}
+const {nums, currencyList, emailMatch, yyyymmddMatch, mmddyyyyMatch, currencyMatch, punctuation, directionMatch} = require('./consts')
 
-const currencyList = {
-  'dollars': '$',
-  'euros': '€',
-  'pounds': '£',
-  'rupees': 'Rs',
-  'pesos': '$',
-  'yen': '¥'
-}
 
-const emailMatch = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/
-const yyyymmddMatch = /^\d{2,4}[\/.-]\d{1,2}[\/.-]\d{1,2}$/
-const mmddyyyyMatch = /^\d{1,2}[\/.-]\d{1,2}[\/.-]\d{2,4}$/
-const currencyMatch = '[0-9]+(\.[0-9]{1,2})?$/'
-const punctuation = '.!,\"\"\''
-
-//numOne, numTwo, direction, regexOne, regexTwo
-let arr = [0, 0, 0, '', '']
+//****** Sanitize beginning and end of text string ******//
 
 const sanitize = str => {
   if (punctuation.includes(str[0])) str = str.slice(1)
@@ -49,131 +9,161 @@ const sanitize = str => {
   return str
 }
 
-const directionParse = word => {
+
+//****** Match number to valid numbers ******//
+
+const numParse = num => {
+  if (nums.hasOwnProperty(num)) return nums[num]
+  else return null
+}
+
+
+//****** Match valid type of input to regex ******//
+
+const typeParse = word => {
   switch(word) {
-    case 'preceding':
-      return 1
-    case 'through':
-      return 2
-    case 'following':
-      return 3
+    case 'email':
+      return [emailMatch, null]
+    case 'string':
+      return [null, null]
+    case 'date':
+      return [yyyymmddMatch, mmddyyyyMatch]
+    case currencyList.hasOwnProperty(word) ? word : 'currency':
+      let newRegex = new RegExp(`^\\${currencyList[word]}${currencyMatch}`)
+      return [newRegex, null]
     default:
-      return 0
+      return []
   }
 }
 
-const numsParse = arr => {
-  let numArr = []
-  for (let i = 0; i < arr.length; i++) {
-    if (nums.hasOwnProperty(arr[i])) {
-      numArr.push(arr[i])
+
+//****** Match everything after direction word ******//
+
+const detailParse = words => {
+  let numTwo
+  let word
+  if (words.length === 1) {
+    numTwo = null
+    word = words.join(' ')
+  } else {
+    if (numParse(words[0]) !== null) {
+      numTwo = numParse(words[0])
+    } else if (!isNaN(+words[0])) {
+      numTwo = words[0]
+    }
+    word = null
+  }
+  return [numTwo, word]
+}
+
+
+//****** Match each valid word in rule ******//
+
+const ruleParse = str => {
+  let ruleSplit = str.split(' ').map(e => {
+    return sanitize(e)
+  })
+
+  //if the rule doesn't contain a direction word, don't proceed, return error
+  if (!directionMatch.includes(ruleSplit[1])) {
+    return [null, null, null, 'Rule input is not formatted correctly.', null]
+  }
+
+  let numOne = numParse(ruleSplit[0])
+  //if the rule is looking for a specific index of word, numTwo is null, else if there is a number after the directional word, capture the number
+  let numTwo = ruleSplit.length > 2 ? detailParse(ruleSplit.slice(2))[0] : null
+  let type = typeParse(ruleSplit[0])
+  let direction = ruleSplit[1]
+  let details = detailParse(ruleSplit.slice(2))[1]
+
+  return [numOne, numTwo, type, direction, details]
+}
+
+
+//****** Match each word in text with regex ******//
+
+const textParse = (text, regex, details = null) => {
+  for (let i = 0; i < text.length; i++) {
+    //match regex one or regex two; date matches have 2 regular expression options
+    if (text[i].match(regex[0]) || text[i].match(regex[1])) {
+      return text[i]
+    }
+    //no regex necessary to parse text and there are word(s) after the directional word
+    if (regex[0] === null && regex[1] === null && text.includes(details)) {
+      return text[i]
     }
   }
-  return numArr
+  return 'NO RESULT'
 }
+
+
+//****** Based on direction, grab relevant part of text and search for valid answer ******//
+
+const directionParse = (numOne, numTwo, direction, type, textSplit, details) => {
+  let result
+  let detailsIndex = textSplit.indexOf(details)
+
+  //if there are no indexes to match
+  if (numOne === null && numTwo === null) {
+    let limitedText
+    //if there are no matching regex
+    if (type[0] === null && type[1] === null) {
+      let foundIndex = textSplit.indexOf(details)
+      if (direction === 'preceding') {
+        limitedText = textSplit.slice(0, foundIndex + 1)
+        result = textParse(limitedText, type, details)
+      } else if (direction === 'following') {
+        limitedText = textSplit.slice(foundIndex)
+        result = limitedText[1]
+      }
+    //if there are matching regex
+    } else {
+      if (direction === 'preceding') {
+        limitedText = textSplit.slice(0, detailsIndex)
+      } else if (direction === 'following') {
+        limitedText = textSplit.slice(detailsIndex - 1)
+      }
+      result = textParse(limitedText, type)
+    }
+  //if there is at least one index to match
+  } else if (numTwo !== null) {
+    let textExists = textParse(textSplit, type)
+    let foundIndex = textSplit.indexOf(textExists)
+    if (direction === 'preceding') {
+      if (textSplit.slice(foundIndex + 1).length < numTwo) return 'NO RESULT'
+      else result = textParse(textSplit, type)
+    } else if (direction === 'following') {
+      if (textSplit.slice(0, foundIndex).length < numTwo) return 'NO RESULT'
+      else result = textParse(textSplit, type)
+    }
+  }
+  return result
+}
+
+
+//****** Parse the rule and return matching data ******//
 
 const applyRule = (text, rule) => {
-  let ruleSplit = rule.split(' ')
+  let result
+  let textSplit = text.split(' ').map(e => {
+    return sanitize(e)
+  })
 
-  //sanitize rule
-  for (let i = 0; i < ruleSplit.length; i++) {
-    ruleSplit[i] = sanitize(ruleSplit[i])
-  }
+  let [numOne, numTwo, type, direction, details] = ruleParse(rule)
 
-  let textSplit = text.split(' ')
-  let numOneFromWords = 0
-  let numTwoFromWords = null
-  let direction
-  let regexOne
-  let regexTwo
-  let result = ''
-
-  if (ruleSplit.length === 2 && nums.hasOwnProperty(ruleSplit[0])) {
-    numOneFromWords = nums[ruleSplit[0]]
-    result = textSplit[numOneFromWords - 1]
-  }
-
-  switch(ruleSplit[0]) {
-    case nums.hasOwnProperty(ruleSplit[0]) ? ruleSplit[0] : 'number':
-      numOneFromWords = nums[ruleSplit[0]]
-      break
-    case 'email':
-      regexOne = emailMatch
-      regexTwo = ''
-      result = 'email case'
-      break
-    case 'string':
-      result = 'string case'
-      break
-    case 'date':
-      regexOne = yyyymmddMatch
-      regexTwo = mmddyyyyMatch
-      result = 'date case'
-      break
-    case currencyList.hasOwnProperty(ruleSplit[0]) ? ruleSplit[0] : 'currency':
-      regexOne = `/^\\${currencyList[ruleSplit[0]]}${currencyMatch}`
-      regexTwo = ''
-      result = 'currency case'
-      break
-    default:
-      break
-  }
-
-  direction = directionParse(ruleSplit[1])
-  console.log(direction)
-  if (direction === 1) {
-    if (ruleSplit.length > 3) {
-      numTwoFromWords = +ruleSplit[2]
-      console.log('in if')
-    }
-  } else if (direction === 2 || direction === 3) {
-    numTwoFromWords = nums[ruleSplit[2]]
-    console.log('in else', ruleSplit[2])
-  }
-
-  // switch(direction) {
-  //   case 1:
-  //     if (ruleSplit.length > 3) {
-  //       numTwoFromWords = +ruleSplit[2]
-  //     }
-  //     break
-  //   case 2:
-  //     numTwoFromWords = nums[ruleSplit[2]]
-  //     result = textSplit.slice(numOneFromWords - 1, numTwoFromWords).join(' ')
-  //     break
-  //   case 3:
-  //     if (ruleSplit.length > 3) {
-  //       numTwoFromWords = +ruleSplit[2]
-  //     }
-  //     break
-  //   default:
-  //     break
-  // }
-
-  for (let i = 0; i < textSplit.length; i++) {
-    if (direction === 1 && ruleSplit.length < 4) {
-      console.log('direction test', numTwoFromWords)
-    }
-    if (direction === 2) {
-      console.log('following direction test')
+  //if the rule doesn't contain a direction word, don't proceed, return error
+  if (!directionMatch.includes(direction)) return {errors: [direction]}
+  else {
+    if (direction === 'word' || direction === 'words' || direction === 'string' || direction === 'strings') {
+      result = textSplit[numOne - 1]
+    } else if (direction === 'through') {
+      result = textSplit.slice(numOne - 1, numTwo).join(' ')
+    } else if (direction === 'preceding' || direction === 'following') {
+      result = directionParse(numOne, numTwo, direction, type, textSplit, details)
     }
   }
 
-  return sanitize(result)
+  return {result}
 }
 
 module.exports = applyRule
-
-// console.log(applyRule('Hey Jude, don\'t make it bad. Take a sad song and make it better', 'sixth word'))
-
-// console.log(applyRule('Hey Jude, don\'t make it bad. Take a sad song and make it better', 'second through 4th word'))
-
-// console.log(applyRule('Hey Jude, don\'t make it bad. Take scoy@gmail.com a sad song and make it better', 'email following 3 words'))
-
-// console.log(applyRule('Hey Jude, don\'t make it bad. Take a sad song and make it better', 'string following "Jude"'))
-
-// console.log(applyRule('Hey Jude, don\'t make it bad. Take a sad song and 3/4/19 make it better', 'date preceding "make"'))
-
-// console.log(applyRule('Hey Jude, don\'t €5 make it bad. Take a sad song and make it better', 'euros preceding 3 words'))
-
-// console.log(applyRule('Hey Jude, don\'t make it bad. Take a sad song $42.99 and make it better', 'dollars following 3 words'))
