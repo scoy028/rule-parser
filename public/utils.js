@@ -89,13 +89,14 @@ const ruleParse = str => {
 //****** Match each word in text with regex ******//
 
 const textParse = (text, regex, details = null) => {
-  for (let i = 0; i < text.length; i++) {
+  for (let i = text.length - 1; i >= 0; i--) {
     //match regex one or regex two; date matches have 2 regular expression options
     if (text[i].match(regex[0]) || text[i].match(regex[1]) && details === null) {
       return text[i]
     }
     //no regex necessary to parse text and there are word(s) after the directional word
     if (regex[0] === null && regex[1] === null && text.includes(details)) {
+      matchedText[i] = text[i]
       return text[i]
     }
   }
@@ -145,6 +146,7 @@ const directionParse = (numOne, numTwo, direction, type, textSplit, details) => 
       else result = textParse(textSplit, type)
     }
   }
+
   return result
 }
 
