@@ -30,6 +30,6 @@ npm install
 
 If you want to run the tests, you can also `npm run test`.
 
-Use Postman to test your request.
+Use Postman to test your own request.
 
 [![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/71bc5e8118f0afa9c360)
