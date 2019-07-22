@@ -1,4 +1,13 @@
-const {nums, currencyList, emailMatch, yyyymmddMatch, mmddyyyyMatch, currencyMatch, punctuation, directionMatch} = require('./consts')
+const {
+  nums,
+  currencyList,
+  emailMatch,
+  yyyymmddMatch,
+  mmddyyyyMatch,
+  currencyMatch,
+  punctuation,
+  directionMatch
+} = require('./consts')
 
 
 
@@ -102,7 +111,7 @@ const textParse = (direction, text, regex, details = null) => {
       }
     }
     return 'NO RESULT'
-  //if direction is 'preceding', 'through', null
+  //if direction is 'preceding', 'through', 'word', 'words', 'string', 'strings'
   } else {
     for (let i = text.length - 1; i >= 0; i--) {
       //match regex one or regex two; date matches have 2 regular expression options
@@ -129,6 +138,7 @@ const directionParse = (numOne, numTwo, direction, type, textSplit, details) => 
 
   //if there are no indexes to match
   if (numOne === null && numTwo === null) {
+    //collection point for slice of text relevant to directional word
     let limitedText
     if (detailsIndex === -1) return 'NO RESULT'
     //if there are no matching regex
@@ -186,6 +196,7 @@ const applyRule = (text, rule) => {
     if (direction === 'word' || direction === 'words' || direction === 'string' || direction === 'strings') {
       result = textSplit[numOne - 1]
     } else if (direction === 'through') {
+      //use unsanitized text in order to preserve punctuation within segment of text
       result = textSplitUnsanitized.slice(numOne - 1, numTwo).join(' ')
     } else if (direction === 'preceding' || direction === 'following') {
       result = directionParse(numOne, numTwo, direction, type, textSplit, details)

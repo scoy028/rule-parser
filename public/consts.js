@@ -41,4 +41,13 @@ const currencyMatch = '[0-9]+(\.[0-9]{1,2})?$'
 const punctuation = '.!,\"\"\''
 const directionMatch = ['through', 'preceding', 'following', 'word', 'words', 'string', 'strings']
 
-module.exports = {nums, currencyList, emailMatch, yyyymmddMatch, mmddyyyyMatch, currencyMatch, punctuation, directionMatch}
+module.exports = {
+  nums,
+  currencyList,
+  emailMatch,
+  yyyymmddMatch,
+  mmddyyyyMatch,
+  currencyMatch,
+  punctuation,
+  directionMatch
+}
