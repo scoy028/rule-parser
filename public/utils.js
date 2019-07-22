@@ -88,19 +88,35 @@ const ruleParse = str => {
 
 //****** Match each word in text with regex ******//
 
-const textParse = (text, regex, details = null) => {
-  for (let i = text.length - 1; i >= 0; i--) {
-    //match regex one or regex two; date matches have 2 regular expression options
-    if (text[i].match(regex[0]) || text[i].match(regex[1]) && details === null) {
-      return text[i]
+const textParse = (direction, text, regex, details = null) => {
+  if (direction === 'following') {
+    for (let i = 0; i < text.length; i++) {
+      //match regex one or regex two; date matches have 2 regular expression options
+      if (text[i].match(regex[0]) || text[i].match(regex[1]) && details === null) {
+        return text[i]
+      }
+      //no regex necessary to parse text and there are word(s) after the directional word
+      if (regex[0] === null && regex[1] === null && text.includes(details)) {
+        matchedText[i] = text[i]
+        return text[i]
+      }
     }
-    //no regex necessary to parse text and there are word(s) after the directional word
-    if (regex[0] === null && regex[1] === null && text.includes(details)) {
-      matchedText[i] = text[i]
-      return text[i]
+    return 'NO RESULT'
+  //if direction is 'preceding', 'through', null
+  } else {
+    for (let i = text.length - 1; i >= 0; i--) {
+      //match regex one or regex two; date matches have 2 regular expression options
+      if (text[i].match(regex[0]) || text[i].match(regex[1]) && details === null) {
+        return text[i]
+      }
+      //no regex necessary to parse text and there are word(s) after the directional word
+      if (regex[0] === null && regex[1] === null && text.includes(details)) {
+        matchedText[i] = text[i]
+        return text[i]
+      }
     }
+    return 'NO RESULT'
   }
-  return 'NO RESULT'
 }
 
 
@@ -120,7 +136,7 @@ const directionParse = (numOne, numTwo, direction, type, textSplit, details) => 
       let foundIndex = textSplit.indexOf(details)
       if (direction === 'preceding') {
         limitedText = textSplit.slice(0, foundIndex + 1)
-        result = textParse(limitedText, type, details)
+        result = textParse(direction, limitedText, type, details)
       } else if (direction === 'following') {
         limitedText = textSplit.slice(foundIndex)
         result = limitedText[1]
@@ -129,21 +145,22 @@ const directionParse = (numOne, numTwo, direction, type, textSplit, details) => 
     } else {
       if (direction === 'preceding') {
         limitedText = textSplit.slice(0, detailsIndex)
+        result = textParse(direction, limitedText, type)
       } else if (direction === 'following') {
         limitedText = textSplit.slice(detailsIndex - 1)
+        result = textParse(direction, limitedText, type)
       }
-      result = textParse(limitedText, type)
     }
   //if there is at least one index to match
   } else if (numTwo !== null) {
-    let textExists = textParse(textSplit, type)
+    let textExists = textParse(direction, textSplit, type)
     let foundIndex = textSplit.indexOf(textExists)
     if (direction === 'preceding') {
       if (textSplit.slice(foundIndex + 1).length < numTwo) return 'NO RESULT'
-      else result = textParse(textSplit, type)
+      else result = textParse(direction, textSplit, type)
     } else if (direction === 'following') {
       if (textSplit.slice(0, foundIndex).length < numTwo) return 'NO RESULT'
-      else result = textParse(textSplit, type)
+      else result = textParse(direction, textSplit, type)
     }
   }
 
